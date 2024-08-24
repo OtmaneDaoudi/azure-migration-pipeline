@@ -1,0 +1,5 @@
+infrastructure/*.tfstate
+infrastructure/.terraform
+infrastructure/.terraform.lock.hcl
+infrastructure/*.tfstate*
+infrastructure/env.sh
