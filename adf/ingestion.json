@@ -1,107 +1,100 @@
-[{
-    "name": "ingestion pipeline",
-    "properties": {
-        "description": "On-Prem MySQL data ingestion pipeline.",
-        "activities": [
-            {
-                "name": "Fetch database metadata",
-                "description": "Fetch the names of tables to ingest.",
-                "type": "Lookup",
-                "dependsOn": [],
-                "policy": {
-                    "timeout": "0.12:00:00",
-                    "retry": 0,
-                    "retryIntervalInSeconds": 30,
-                    "secureOutput": false,
-                    "secureInput": false
-                },
-                "userProperties": [],
-                "typeProperties": {
-                    "source": {
-                        "type": "MySqlSource",
-                        "query": "show tables where Tables_in_adventureworkslt2017 not like \"dbo%\";"
-                    },
-                    "dataset": {
-                        "referenceName": "mysql_dataset_source",
-                        "type": "DatasetReference"
-                    },
-                    "firstRowOnly": false
-                }
+[
+    {
+        "name": "Fetch database metadata",
+        "description": "Fetch the names of tables to ingest.",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+            "timeout": "0.12:00:00",
+            "retry": 0,
+            "retryIntervalInSeconds": 30,
+            "secureOutput": false,
+            "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+            "source": {
+                "type": "MySqlSource",
+                "query": "show tables where Tables_in_adventureworkslt2017 not like \"dbo%\";"
             },
+            "dataset": {
+                "referenceName": "mysql_dataset_source",
+                "type": "DatasetReference"
+            },
+            "firstRowOnly": false
+        }
+    },
+    {
+        "name": "For each table",
+        "description": "Loop over each table to fetch its content.",
+        "type": "ForEach",
+        "dependsOn": [
             {
-                "name": "For each table",
-                "description": "Loop over each table to fetch its content.",
-                "type": "ForEach",
-                "dependsOn": [
-                    {
-                        "activity": "Fetch database metadata",
-                        "dependencyConditions": [
-                            "Succeeded"
-                        ]
-                    }
-                ],
-                "userProperties": [],
-                "typeProperties": {
-                    "items": {
-                        "value": "@activity('Fetch database metadata').output.value",
-                        "type": "Expression"
+                "activity": "Fetch database metadata",
+                "dependencyConditions": [
+                    "Succeeded"
+                ]
+            }
+        ],
+        "userProperties": [],
+        "typeProperties": {
+            "items": {
+                "value": "@activity('Fetch database metadata').output.value",
+                "type": "Expression"
+            },
+            "activities": [
+                {
+                    "name": "Copy table content",
+                    "description": "Copy the content of a given table",
+                    "type": "Copy",
+                    "dependsOn": [],
+                    "policy": {
+                        "timeout": "0.12:00:00",
+                        "retry": 0,
+                        "retryIntervalInSeconds": 30,
+                        "secureOutput": false,
+                        "secureInput": false
                     },
-                    "activities": [
+                    "userProperties": [],
+                    "typeProperties": {
+                        "source": {
+                            "type": "MySqlSource",
+                            "query": {
+                                "value": "@concat('SELECT * FROM ',item().Tables_in_adventureworkslt2017)",
+                                "type": "Expression"
+                            }
+                        },
+                        "sink": {
+                            "type": "ParquetSink",
+                            "storeSettings": {
+                                "type": "AzureBlobFSWriteSettings"
+                            },
+                            "formatSettings": {
+                                "type": "ParquetWriteSettings"
+                            }
+                        },
+                        "enableStaging": false
+                    },
+                    "inputs": [
                         {
-                            "name": "Copy table content",
-                            "description": "Copy the content of a given table",
-                            "type": "Copy",
-                            "dependsOn": [],
-                            "policy": {
-                                "timeout": "0.12:00:00",
-                                "retry": 0,
-                                "retryIntervalInSeconds": 30,
-                                "secureOutput": false,
-                                "secureInput": false
-                            },
-                            "userProperties": [],
-                            "typeProperties": {
-                                "source": {
-                                    "type": "MySqlSource",
-                                    "query": {
-                                        "value": "@concat('SELECT * FROM ',item().Tables_in_adventureworkslt2017)",
-                                        "type": "Expression"
-                                    }
-                                },
-                                "sink": {
-                                    "type": "ParquetSink",
-                                    "storeSettings": {
-                                        "type": "AzureBlobFSWriteSettings"
-                                    },
-                                    "formatSettings": {
-                                        "type": "ParquetWriteSettings"
-                                    }
-                                },
-                                "enableStaging": false
-                            },
-                            "inputs": [
-                                {
-                                    "referenceName": "mysql_dataset_source",
-                                    "type": "DatasetReference"
+                            "referenceName": "mysql_dataset_source",
+                            "type": "DatasetReference"
+                        }
+                    ],
+                    "outputs": [
+                        {
+                            "referenceName": "datalake_sink",
+                            "type": "DatasetReference",
+                            "parameters": {
+                                "table_name": {
+                                    "value": "@item().Tables_in_adventureworkslt2017",
+                                    "type": "Expression"
                                 }
-                            ],
-                            "outputs": [
-                                {
-                                    "referenceName": "datalake_sink",
-                                    "type": "DatasetReference",
-                                    "parameters": {
-                                        "table_name": {
-                                            "value": "@item().Tables_in_adventureworkslt2017",
-                                            "type": "Expression"
-                                        }
-                                    }
-                                }
-                            ]
+                            }
                         }
                     ]
                 }
-            }
-        ],
-        "annotations": []
+            ]
+        }
     }
-}]
+]

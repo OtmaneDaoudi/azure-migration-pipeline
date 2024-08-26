@@ -4,6 +4,7 @@ resource "azurerm_resource_group" "resource_group" {
   location = var.location
 }
 
+
 # Key vault setup
 data "azurerm_client_config" "current" {}
 
@@ -34,6 +35,7 @@ resource "azurerm_key_vault_secret" "secrets" {
   key_vault_id = azurerm_key_vault.key_vault.id
   for_each     = var.secrets
 }
+
 
 # Azure data lake gen2
 resource "azurerm_storage_account" "data_lake" {
@@ -69,7 +71,7 @@ resource "azurerm_data_factory_integration_runtime_self_hosted" "self_hosted_int
     # This command is found in the folder where MS integration runtime is installed under PowershellScript
     # Make sure to add it to your PATH
     # Increase the sleep duration to give the node a chance to connect using the new key!
-    command = "powershell.exe RegisterIntegrationRuntime.ps1 -gatewayKey ${self.primary_authorization_key}; sleep 30"
+    command = "powershell.exe RegisterIntegrationRuntime.ps1 -gatewayKey ${self.primary_authorization_key}; sleep 60"
   }
 }
 
@@ -84,7 +86,6 @@ resource "azurerm_data_factory_dataset_mysql" "mysql_dataset" {
   name                = var.mysql_dataset_name
   data_factory_id     = azurerm_data_factory.data_factory.id
   linked_service_name = azurerm_data_factory_linked_service_mysql.mysql_source.name
-  # table_name          = var.table_name
 }
 
 resource "azurerm_data_factory_linked_service_data_lake_storage_gen2" "data_lake_sink" {
@@ -103,7 +104,7 @@ resource "azurerm_data_factory_dataset_parquet" "parquet_dataset" {
   azure_blob_fs_location {
     file_system = azurerm_storage_container.data_lake_container.name
     # each table's data is stored in a separate file
-    filename = "dataset().table_name"
+    filename = "@concat(dataset().table_name, '.parquet')"
     dynamic_filename_enabled = true
   }
 
@@ -116,18 +117,28 @@ resource "azurerm_data_factory_pipeline" "ingestion_pipeline" {
   name            = "ingestion_pipeline"
   data_factory_id = azurerm_data_factory.data_factory.id
   activities_json = file("../adf/ingestion.json")
+
+  provisioner "local-exec" {
+    command = "./trigger_pipeline.sh"
+    working_dir = "../adf"
+  }
+
+  depends_on = [ azurerm_data_factory_dataset_parquet.parquet_dataset,
+                 azurerm_data_factory_dataset_mysql.mysql_dataset]
 }
 
 
 # # Databricks workspace
-# # resource "azurerm_databricks_workspace" "databricks" {
-# #   name                          = var.databricks_workspace_name
-# #   resource_group_name           = azurerm_resource_group.resource_group.name
-# #   location                      = var.location
-# #   sku                           = var.databricks_sku
-# #   public_network_access_enabled = true
-# # }
+# resource "azurerm_databricks_workspace" "databricks" {
+#   name                          = var.databricks_workspace_name
+#   resource_group_name           = azurerm_resource_group.resource_group.name
+#   location                      = var.location
+#   sku                           = var.databricks_sku
+#   public_network_access_enabled = true
+# }
 
+
+# Azure synapse
 # # resource "azurerm_storage_data_lake_gen2_filesystem" "data_lake_fs" {
 # #   name               = "datalakefs"
 # #   storage_account_id = azurerm_storage_account.data_lake.id
