@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     azurerm = {
-      source = "hashicorp/azurerm"
+      source  = "hashicorp/azurerm"
       version = "4.0.1"
     }
   }
@@ -9,5 +9,10 @@ terraform {
 
 provider "azurerm" {
   subscription_id = var.subscription_id
-  features {}
+  features {
+    key_vault {
+      recover_soft_deleted_key_vaults = false
+      purge_soft_delete_on_destroy    = true
+    }
+  }
 }
