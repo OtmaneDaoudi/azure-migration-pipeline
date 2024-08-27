@@ -30,15 +30,26 @@ resource "databricks_cluster" "driver_node" {
   }
 
   spark_env_vars = {
-    "sas_token" = var.sas_token
+    "sas_token"            = var.sas_token
     "container_names"      = join(",", var.container_names)
     "storage_account_name" = var.storage_account_name
   }
 }
 
 resource "databricks_notebook" "bronze_to_silver_notebok" {
-  source = "../../databricks/bronze to silver.ipynb"
-  path   = "/Shared/bronze to silver.ipynb"
+  source   = "../../databricks/bronze to silver.ipynb"
+  path     = "/Shared/bronze to silver.ipynb"
+  language = "PYTHON"
+  format   = "JUPYTER"
 
   depends_on = [databricks_cluster.driver_node]
+}
+
+resource "databricks_notebook" "silver_to_gold_notebok" {
+  source   = "../../databricks/silver to gold.ipynb"
+  path     = "/Shared/silver to gold.ipynb"
+  language = "PYTHON"
+  format   = "JUPYTER"
+
+  depends_on = [databricks_cluster.driver_node, databricks_notebook.bronze_to_silver_notebok]
 }
