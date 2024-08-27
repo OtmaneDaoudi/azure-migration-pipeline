@@ -84,20 +84,15 @@ data "azurerm_storage_account_sas" "sas_access" {
   permissions {
     read    = true
     write   = true
-    delete  = false
+    delete  = true
     list    = true
     add     = true
     create  = true
     update  = true
-    process = false
-    tag     = false
+    process = true
+    tag     = true
     filter  = true
   }
-}
-
-output "sas_url_query_string" {
-  value = data.azurerm_storage_account_sas.sas_access.sas
-  sensitive = true
 }
 
 

@@ -36,9 +36,9 @@ resource "databricks_cluster" "driver_node" {
   }
 }
 
-resource "databricks_notebook" "notebook" {
-  source = "../../databricks/transformations.ipynb"
-  path   = "/Shared/transformations.ipynb"
+resource "databricks_notebook" "bronze_to_silver_notebok" {
+  source = "../../databricks/bronze to silver.ipynb"
+  path   = "/Shared/bronze to silver.ipynb"
 
   depends_on = [databricks_cluster.driver_node]
 }
