@@ -16,8 +16,6 @@ variable "storage_account_tier" {}
 
 variable "storage_account_replication_type" {}
 
-variable "container_name" {}
-
 variable "synapse_workspace_name" {}
 
 variable "sql_administrator_login" {}
@@ -68,4 +66,16 @@ variable "data_lake_linked_service_name" {}
 
 variable "data_lake_parquet_dataset_name" {}
 
-variable "table_name" {}
+variable "user_name" {}
+
+variable "display_name" {}
+
+variable "cluster_name" {}
+
+variable "container_names" {
+  default = ["bronze", "silver", "gold"]
+}
+
+variable "today" {}
+
+variable "tomorrow" {}

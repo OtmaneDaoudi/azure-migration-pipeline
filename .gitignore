@@ -2,5 +2,14 @@ infrastructure/*.tfstate
 infrastructure/.terraform
 infrastructure/.terraform.lock.hcl
 infrastructure/*.tfstate*
+
+infrastructure/databricks/*.tfstate*
+infrastructure/databricks/.terraform
+infrastructure/databricks/.terraform.lock.hcl
+infrastructure/databricks/*.tfstate
+
+
 infrastructure/env.sh
 data/*
+
+infrastructure/*.sh

@@ -48,10 +48,56 @@ resource "azurerm_storage_account" "data_lake" {
   is_hns_enabled           = true # forces the creation of an Azure Data Lake Storage Gen 2
 }
 
-resource "azurerm_storage_container" "data_lake_container" {
-  name                  = var.container_name
+resource "azurerm_storage_container" "data_lake_containers" {
+  name                  = var.container_names[count.index]
   storage_account_name  = azurerm_storage_account.data_lake.name
-  container_access_type = "private"
+  container_access_type = "container"
+  count                 = 3
+}
+
+resource "azurerm_storage_data_lake_gen2_filesystem" "data_lake_fs" {
+  name               = "datalakefs"
+  storage_account_id = azurerm_storage_account.data_lake.id
+}
+
+data "azurerm_storage_account_sas" "sas_access" {
+  connection_string = azurerm_storage_account.data_lake.primary_connection_string
+  https_only        = false
+  signed_version    = "2022-11-02"
+
+  resource_types {
+    service   = true
+    container = true
+    object    = true
+  }
+
+  services {
+    blob  = true
+    queue = true
+    table = true
+    file  = true
+  }
+
+  start  = var.today
+  expiry = var.tomorrow
+
+  permissions {
+    read    = true
+    write   = true
+    delete  = false
+    list    = true
+    add     = true
+    create  = true
+    update  = true
+    process = false
+    tag     = false
+    filter  = true
+  }
+}
+
+output "sas_url_query_string" {
+  value = data.azurerm_storage_account_sas.sas_access.sas
+  sensitive = true
 }
 
 
@@ -102,9 +148,9 @@ resource "azurerm_data_factory_dataset_parquet" "parquet_dataset" {
   compression_codec   = "gzip"
 
   azure_blob_fs_location {
-    file_system = azurerm_storage_container.data_lake_container.name
+    file_system = azurerm_storage_container.data_lake_containers[0].name
     # each table's data is stored in a separate file
-    filename = "@concat(dataset().table_name, '.parquet')"
+    filename                 = "@concat(dataset().table_name, '.parquet')"
     dynamic_filename_enabled = true
   }
 
@@ -119,30 +165,29 @@ resource "azurerm_data_factory_pipeline" "ingestion_pipeline" {
   activities_json = file("../adf/ingestion.json")
 
   provisioner "local-exec" {
-    command = "./trigger_pipeline.sh"
+    command     = "./trigger_pipeline.sh"
     working_dir = "../adf"
   }
 
-  depends_on = [ azurerm_data_factory_dataset_parquet.parquet_dataset,
-                 azurerm_data_factory_dataset_mysql.mysql_dataset]
+  depends_on = [azurerm_data_factory_dataset_parquet.parquet_dataset,
+  azurerm_data_factory_dataset_mysql.mysql_dataset]
 }
 
 
-# # Databricks workspace
-# resource "azurerm_databricks_workspace" "databricks" {
-#   name                          = var.databricks_workspace_name
-#   resource_group_name           = azurerm_resource_group.resource_group.name
-#   location                      = var.location
-#   sku                           = var.databricks_sku
-#   public_network_access_enabled = true
-# }
+# Databricks setup
+resource "azurerm_databricks_workspace" "databricks" {
+  name                          = var.databricks_workspace_name
+  resource_group_name           = azurerm_resource_group.resource_group.name
+  location                      = var.location
+  sku                           = var.databricks_sku
+  public_network_access_enabled = true
+}
 
+output "workspace_url" {
+  value = azurerm_databricks_workspace.databricks.workspace_url
+}
 
 # Azure synapse
-# # resource "azurerm_storage_data_lake_gen2_filesystem" "data_lake_fs" {
-# #   name               = "datalakefs"
-# #   storage_account_id = azurerm_storage_account.data_lake.id
-# # }
 
 # # resource "azurerm_synapse_workspace" "synapse_analytics" {
 # #   name                                 = var.synapse_workspace_name
