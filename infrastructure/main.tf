@@ -159,10 +159,10 @@ resource "azurerm_data_factory_pipeline" "ingestion_pipeline" {
   data_factory_id = azurerm_data_factory.data_factory.id
   activities_json = file("../adf/ingestion.json")
 
-  provisioner "local-exec" {
-    command     = "./trigger_pipeline.sh"
-    working_dir = "../adf"
-  }
+  # provisioner "local-exec" {
+  #   command     = "./trigger_pipeline.sh"
+  #   working_dir = "../adf"
+  # }
 
   depends_on = [azurerm_data_factory_dataset_parquet.parquet_dataset,
   azurerm_data_factory_dataset_mysql.mysql_dataset]
@@ -178,9 +178,34 @@ resource "azurerm_databricks_workspace" "databricks" {
   public_network_access_enabled = true
 }
 
-output "workspace_url" {
-  value = azurerm_databricks_workspace.databricks.workspace_url
+# output "workspace_url" {
+#   value = azurerm_databricks_workspace.databricks.workspace_url
+# }
+
+resource "null_resource" "init_databricks_infra" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      source ./env.sh
+      cd ./databricks
+      export TF_VAR_sas_token=${nonsensitive(data.azurerm_storage_account_sas.sas_access.sas)}
+      export TF_VAR_data_factory_id=${azurerm_data_factory.data_factory.id}
+      export TF_VAR_subscription_id=${data.azurerm_client_config.current.subscription_id}
+      export TF_VAR_workspace_url=${azurerm_databricks_workspace.databricks.workspace_url}
+      export TF_VAR_databricks_linked_service_name=${var.databricks_linked_service_name}
+      terraform init
+      terraform apply -auto-approve
+    EOT
+  }
+
+  provisioner "local-exec" {
+    when = destroy
+    command = <<-EOT
+    cd ./databricks
+    ./destroy.sh
+    EOT
+  }
 }
+
 
 # Azure synapse
 

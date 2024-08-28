@@ -79,3 +79,5 @@ variable "container_names" {
 variable "today" {}
 
 variable "tomorrow" {}
+
+variable "databricks_linked_service_name" {}

@@ -53,3 +53,19 @@ resource "databricks_notebook" "silver_to_gold_notebok" {
 
   depends_on = [databricks_cluster.driver_node, databricks_notebook.bronze_to_silver_notebok]
 }
+
+resource "databricks_token" "pat" {
+  comment  = "Azure databricks linked service"
+  // 100 day token
+  lifetime_seconds = 8640000
+}
+
+# Azure linked service for databricks
+resource "azurerm_data_factory_linked_service_azure_databricks" "databricks_linked_service" {
+  name                = var.databricks_linked_service_name
+  data_factory_id     = var.data_factory_id
+  existing_cluster_id = databricks_cluster.driver_node.id
+
+  access_token = databricks_token.pat.token_value
+  adb_domain   = "https://${var.workspace_url}"
+}
