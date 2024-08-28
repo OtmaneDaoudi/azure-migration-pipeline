@@ -96,5 +96,59 @@
                 }
             ]
         }
+    },
+    {
+        "name": "Bronz to silver transformation",
+        "type": "DatabricksNotebook",
+        "dependsOn": [
+            {
+                "activity": "For each table",
+                "dependencyConditions": [
+                    "Succeeded"
+                ]
+            }
+        ],
+        "policy": {
+            "timeout": "0.12:00:00",
+            "retry": 0,
+            "retryIntervalInSeconds": 30,
+            "secureOutput": false,
+            "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+            "notebookPath": "/Shared/bronze to silver.ipynb"
+        },
+        "linkedServiceName": {
+            "referenceName": "databricksls",
+            "type": "LinkedServiceReference"
+        }
+    },
+    {
+        "name": "Silver to gold trnasformation",
+        "type": "DatabricksNotebook",
+        "dependsOn": [
+            {
+                "activity": "Bronz to silver transformation",
+                "dependencyConditions": [
+                    "Succeeded"
+                ]
+            }
+        ],
+        "policy": {
+            "timeout": "0.12:00:00",
+            "retry": 0,
+            "retryIntervalInSeconds": 30,
+            "secureOutput": false,
+            "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+            "notebookPath": "/Shared/silver to gold.ipynb"
+        },
+        "linkedServiceName": {
+            "referenceName": "databricksls",
+            "type": "LinkedServiceReference"
+        }
     }
 ]

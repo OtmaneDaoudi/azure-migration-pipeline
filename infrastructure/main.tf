@@ -155,17 +155,20 @@ resource "azurerm_data_factory_dataset_parquet" "parquet_dataset" {
 }
 
 resource "azurerm_data_factory_pipeline" "ingestion_pipeline" {
-  name            = "ingestion_pipeline"
+  name            = "migration_pipeline"
   data_factory_id = azurerm_data_factory.data_factory.id
-  activities_json = file("../adf/ingestion.json")
+  activities_json = file("../adf/pipeline.json")
 
   # provisioner "local-exec" {
   #   command     = "./trigger_pipeline.sh"
   #   working_dir = "../adf"
   # }
 
-  depends_on = [azurerm_data_factory_dataset_parquet.parquet_dataset,
-  azurerm_data_factory_dataset_mysql.mysql_dataset]
+  depends_on = [
+    azurerm_data_factory_dataset_parquet.parquet_dataset,
+    azurerm_data_factory_dataset_mysql.mysql_dataset,
+    null_resource.init_databricks_infra
+  ]
 }
 
 
@@ -178,46 +181,46 @@ resource "azurerm_databricks_workspace" "databricks" {
   public_network_access_enabled = true
 }
 
-# output "workspace_url" {
-#   value = azurerm_databricks_workspace.databricks.workspace_url
-# }
-
 resource "null_resource" "init_databricks_infra" {
   provisioner "local-exec" {
     command = <<-EOT
-      source ./env.sh
+      sleep 10
+      . ./env.sh
       cd ./databricks
-      export TF_VAR_sas_token=${nonsensitive(data.azurerm_storage_account_sas.sas_access.sas)}
-      export TF_VAR_data_factory_id=${azurerm_data_factory.data_factory.id}
-      export TF_VAR_subscription_id=${data.azurerm_client_config.current.subscription_id}
-      export TF_VAR_workspace_url=${azurerm_databricks_workspace.databricks.workspace_url}
-      export TF_VAR_databricks_linked_service_name=${var.databricks_linked_service_name}
+      export TF_VAR_sas_token="${nonsensitive(data.azurerm_storage_account_sas.sas_access.sas)}"
+      export TF_VAR_data_factory_id="${azurerm_data_factory.data_factory.id}"
+      export TF_VAR_subscription_id="${data.azurerm_client_config.current.subscription_id}"
+      export TF_VAR_workspace_url="${azurerm_databricks_workspace.databricks.workspace_url}"
+      export TF_VAR_databricks_linked_service_name="${var.databricks_linked_service_name}"
       terraform init
       terraform apply -auto-approve
+      sleep 10
     EOT
   }
 
   provisioner "local-exec" {
-    when = destroy
+    when    = destroy
     command = <<-EOT
     cd ./databricks
     ./destroy.sh
     EOT
   }
+
+  depends_on = [azurerm_databricks_workspace.databricks]
 }
 
 
 # Azure synapse
 
-# # resource "azurerm_synapse_workspace" "synapse_analytics" {
-# #   name                                 = var.synapse_workspace_name
-# #   resource_group_name                  = azurerm_resource_group.resource_group.name
-# #   location                             = var.location
-# #   storage_data_lake_gen2_filesystem_id = azurerm_storage_data_lake_gen2_filesystem.data_lake_fs.id
-# #   sql_administrator_login              = var.sql_administrator_login
-# #   sql_administrator_login_password     = var.sql_administrator_login_password
+resource "azurerm_synapse_workspace" "synapse_analytics" {
+  name                                 = var.synapse_workspace_name
+  resource_group_name                  = azurerm_resource_group.resource_group.name
+  location                             = var.location
+  storage_data_lake_gen2_filesystem_id = azurerm_storage_data_lake_gen2_filesystem.data_lake_fs.id
+  sql_administrator_login              = var.sql_administrator_login
+  sql_administrator_login_password     = var.sql_administrator_login_password
 
-# #   identity {
-# #     type = "SystemAssigned"
-# #   }
-# # }
+  identity {
+    type = "SystemAssigned"
+  }
+}

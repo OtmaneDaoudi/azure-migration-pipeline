@@ -55,7 +55,7 @@ resource "databricks_notebook" "silver_to_gold_notebok" {
 }
 
 resource "databricks_token" "pat" {
-  comment  = "Azure databricks linked service"
+  comment = "Azure databricks linked service"
   // 100 day token
   lifetime_seconds = 8640000
 }
