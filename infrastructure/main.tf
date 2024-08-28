@@ -211,7 +211,6 @@ resource "null_resource" "init_databricks_infra" {
 
 
 # Azure synapse
-
 resource "azurerm_synapse_workspace" "synapse_analytics" {
   name                                 = var.synapse_workspace_name
   resource_group_name                  = azurerm_resource_group.resource_group.name
@@ -224,3 +223,11 @@ resource "azurerm_synapse_workspace" "synapse_analytics" {
     type = "SystemAssigned"
   }
 }
+
+resource "azurerm_synapse_firewall_rule" "allow_all" {
+  name                 = "allow_all"
+  synapse_workspace_id = azurerm_synapse_workspace.synapse_analytics.id
+  start_ip_address     = "0.0.0.0"
+  end_ip_address       = "255.255.255.255"
+}
+
