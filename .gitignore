@@ -7,9 +7,3 @@ infrastructure/databricks/*.tfstate*
 infrastructure/databricks/.terraform
 infrastructure/databricks/.terraform.lock.hcl
 infrastructure/databricks/*.tfstate
-
-
-infrastructure/env.sh
-data/*
-
-infrastructure/*.sh

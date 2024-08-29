@@ -31,5 +31,3 @@ INNER JOIN dbo.productmodelproductdescription model
 ON model.Product_Model_ID = pro.Product_Model_ID
 INNER JOIN dbo.productdescription descr
 ON descr.Product_Description_ID = model.Product_Description_ID
-
--- CREATE OR REPLACE VIEW 
