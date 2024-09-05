@@ -22,7 +22,7 @@ The goal of this project is to migrate an on-premise MySQL database to a cloud d
 ![image](https://github.com/user-attachments/assets/5bfbd9fa-6358-46ce-9e90-afe0c1cb092c)
 - The last phase of transformations (Silver to Gold) is then performed in the same manner, placing the cleaned data in the gold container.
 ## Data Modelling
-- Using an Azure Synapse serverless SQL database as an analytics engine to directly query the data in the gold container, I created different views to reflect the different facts and dimension tables.
+- Using an Azure Synapse serverless SQL database as a data warehouse, I created the different facts and dimensions tables using the data in the gold container following the below data model.
   
 ![image](https://github.com/user-attachments/assets/d5e6595f-bd7a-474d-ab19-8976fd907d39)
 ![schema](https://github.com/user-attachments/assets/c05f17e6-02d1-4452-baa1-2b9da033a375)
