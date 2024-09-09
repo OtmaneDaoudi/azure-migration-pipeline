@@ -24,7 +24,10 @@ The goal of this project is to migrate an on-premise MySQL database to a cloud d
 ## Data Modelling
 Using Azure Synapse serverless SQL database as an analytics engine to directly query the data in the gold container, I created different views to reflect the different facts and dimension tables.
 
-![image](https://github.com/user-attachments/assets/d5e6595f-bd7a-474d-ab19-8976fd907d39)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/d5e6595f-bd7a-474d-ab19-8976fd907d39" alt="Sublime's custom image"/>
+</p>
+
 ![schema](https://github.com/user-attachments/assets/c05f17e6-02d1-4452-baa1-2b9da033a375)
 
 
