@@ -10,7 +10,7 @@ The goal of this project is to migrate an on-premise MySQL database to a cloud d
 
 ![image](https://github.com/user-attachments/assets/e0c015e6-fbbf-400c-ac1d-8f867f4ff581)
 
-- An Azure Data Factory pipeline then connects to the host copies the data from all the tables, and loads them into a bronze container within Azure Data Lake in parquet format.
+- An Azure Data Factory pipeline then connects to the host, copies the data from all the tables, and loads them into a bronze container within Azure Data Lake in parquet format.
 
 ![image](https://github.com/user-attachments/assets/6df16eb5-8358-40a7-ac30-1a2bac5516f1)
 ![image](https://github.com/user-attachments/assets/7957946a-2982-4dd2-8739-67e1daf89fe7)
@@ -22,8 +22,8 @@ The goal of this project is to migrate an on-premise MySQL database to a cloud d
 ![image](https://github.com/user-attachments/assets/5bfbd9fa-6358-46ce-9e90-afe0c1cb092c)
 - The last phase of transformations (Silver to Gold) is then performed in the same manner, placing the cleaned data in the gold container.
 ## Data Modelling
-Using an Azure Synapse serverless SQL database as a data warehouse, I created the different facts and dimensions tables using the data in the gold container following the below data model.
-  
+Using Azure Synapse serverless SQL database as an analytics engine to directly query the data in the gold container, I created different views to reflect the different facts and dimension tables.
+
 ![image](https://github.com/user-attachments/assets/d5e6595f-bd7a-474d-ab19-8976fd907d39)
 ![schema](https://github.com/user-attachments/assets/c05f17e6-02d1-4452-baa1-2b9da033a375)
 
