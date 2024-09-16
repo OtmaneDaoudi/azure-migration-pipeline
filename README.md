@@ -29,7 +29,7 @@ Using Azure Synapse serverless SQL database as an analytics engine to directly q
 ![schema](https://github.com/user-attachments/assets/c05f17e6-02d1-4452-baa1-2b9da033a375)
 
 
-## Analytics & Reporting
+# Analytics & Reporting
 Done using PowerBI, which connects to the Azure Synapse SQL server, and loads the data.
 
 # Dashboard
